@@ -18,6 +18,75 @@ jobs:
             molecule/default/verify.yml
           args: "-x 106"
 
+  ansible:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        distro:
+          - centos7
+        ansible-version:
+          - ansible
+          - ansible-base
+        python-version:
+          - 2.7
+          - 3.6
+          - 3.7
+          - 3.8
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Ansible
+        run: |
+          pip install ${{ matrix.ansible-version }}
+
+      - name: Docker run CentOS image sudo installed
+        run: |
+          docker run -d -t \
+          --privileged \
+          --name=${{ matrix.distro }} \
+          ghcr.io/docker-hub-tm/ansible-test/${{ matrix.distro }}:latest \
+          /sbin/init
+
+      - name: Install Ansible galaxy roles
+        env:
+          ANSIBLE_FORCE_COLOR: '1'
+        run: |
+          ansible-galaxy role install \
+          -r requirements.yml
+
+      - name: Install Ansible galaxy collections
+        env:
+          ANSIBLE_FORCE_COLOR: '1'
+        run: |
+          ansible-galaxy collection install \
+          -r requirements.yml
+
+      - name: Execute ansible-playbook command
+        env:
+          ANSIBLE_FORCE_COLOR: '1'
+        run: |
+          ansible-playbook -i ${{ matrix.distro }}, \
+          -c docker -u ansible molecule/default/converge.yml
+
+      - name: Check idempotency
+        env:
+          ANSIBLE_FORCE_COLOR: '1'
+        run: |
+          ansible-playbook -i ${{ matrix.distro }}, \
+          -c docker -u ansible molecule/default/converge.yml
+
+      - name: Make sure the command works
+        env:
+          ANSIBLE_FORCE_COLOR: '1'
+        run: |
+          ansible-playbook -i ${{ matrix.distro }}, \
+          -c docker -u ansible molecule/default/verify.yml
+
   molecule:
     runs-on: ubuntu-latest
     strategy:
@@ -25,6 +94,7 @@ jobs:
         distro:
           - centos7
         python-version:
+          - 3.6
           - 3.7
           - 3.8
 
@@ -45,8 +115,6 @@ jobs:
           ANSIBLE_FORCE_COLOR: '1'
           MOLECULE_DISTRO: ${{ matrix.distro }}
           MOLECULE_NO_LOG: False
-          GITHUB_PACKAGES_USERNAME: ${{ github.actor }}
-          GITHUB_PACKAGES_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
         run: |
           molecule test
 
@@ -60,7 +128,7 @@ jobs:
   lintAllTheThings:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@master
       - name: yaml-lint
         uses: ibiqlik/action-yamllint@665205c
         with:

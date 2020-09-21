@@ -5,12 +5,7 @@ driver:
   name: docker
 platforms:
   - name: instance
-    image: "docker.pkg.github.com/docker-hub-tm/ansible-test/${MOLECULE_DISTRO:-centos7}:latest"
-    registry:
-      url: docker.pkg.github.com
-      credentials:
-        username: ${GITHUB_PACKAGES_USERNAME}
-        password: ${GITHUB_PACKAGES_PASSWORD}
+    image: ghcr.io/docker-hub-tm/ansible-test/${MOLECULE_DISTRO:-centos7}:latest
     pre_build_image: True
     command: /sbin/init
     privileged: True
