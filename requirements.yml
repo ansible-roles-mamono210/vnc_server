@@ -1,8 +1,0 @@
----
-roles:
-  - name: robertdebock.epel
-  - name: vnc_server
-    src: https://github.com/ansible-roles-matsumura/vnc_server.git
-
-collections:
-  - name: community.general
