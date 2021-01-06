@@ -1,11 +1,11 @@
 ---
 - name: Install X Window System with yum
-  yum:
+  ansible.builtin.yum:
     name: "@X Window System"
     state: present
 
 - name: Install GNOME Desktop with yum
-  yum:
+  ansible.builtin.yum:
     name:
       - gnome-classic-session
       - gnome-terminal
@@ -14,46 +14,46 @@
     state: present
 
 - name: Install ibus-kkc（a Japanese Kana Kanji input engine for IBus）with yum
-  yum:
+  ansible.builtin.yum:
     name: ibus-kkc
     state: present
 
 - name: Install VL Gothic Font Family with yum
-  yum:
+  ansible.builtin.yum:
     name: vlgothic-*
     state: present
 
 - name: Install TigerVNC Server with yum
-  yum:
+  ansible.builtin.yum:
     name: 'tigervnc-server'
     state: present
 
 - name: Check whether configuration file is created
-  command: test -e /etc/systemd/system/vncserver@:1.service
+  ansible.builtin.command: test -e /etc/systemd/system/vncserver@:1.service
   register: CONFIGFILE_EXISTS
   changed_when: False
   ignore_errors: True
 
 - name: Copy configuration file
-  copy:
+  ansible.builtin.copy:
     src: /lib/systemd/system/vncserver@.service
     dest: /etc/systemd/system/vncserver@:1.service
     remote_src: yes
   when: CONFIGFILE_EXISTS is failed
 
 - name: Configure connecting user settings
-  replace:
+  ansible.builtin.replace:
     dest: /etc/systemd/system/vncserver@:1.service
     regexp: '<USER>'
     replace: "{{ vnc_user }}"
 
 - name: Add VNC user to system
-  user:
+  ansible.builtin.user:
     name: "{{ vnc_user }}"
     password: "{{ vnc_password }} | password_hash('sha512')"
 
 - name: Create $HOME/.vnc directory
-  file:
+  ansible.builtin.file:
     path: "/home/{{ vnc_user }}/.vnc"
     state: directory
     owner: '{{ vnc_user }}'
@@ -61,19 +61,19 @@
     mode: 0755
 
 - name: Check whether vnc password is set
-  command: "test -e /home/{{ vnc_user }}/.vnc/passwd"
+  ansible.builtin.command: "test -e /home/{{ vnc_user }}/.vnc/passwd"
   register: VNCPASSWORD_SET
   changed_when: False
   ignore_errors: True
 
 - name: Set default password
-  shell: |
+  ansible.builtin.shell: |
     set -o pipefail
     echo {{ vnc_password }} | vncpasswd -f > /home/{{ vnc_user }}/.vnc/passwd
   when: VNCPASSWORD_SET is failed
 
 - name: Change permission of password settings file
-  file:
+  ansible.builtin.file:
     path: "/home/{{ vnc_user }}/.vnc/passwd"
     state: file
     owner: '{{ vnc_user }}'
@@ -81,7 +81,7 @@
     mode: 0600
 
 - name: Start and enable VNC server
-  systemd:
+  ansible.builtin.systemd:
     name: vncserver@:1.service
     state: started
     enabled: yes
