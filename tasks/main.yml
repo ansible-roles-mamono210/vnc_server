@@ -86,3 +86,9 @@
     state: started
     enabled: yes
     daemon_reload: yes
+
+- name: Disable firewalld
+  ansible.builtin.systemd:
+    name: firewalld
+    state: stopped
+    enabled: no
