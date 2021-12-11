@@ -6,7 +6,6 @@ driver:
 platforms:
   - name: instance
     image: ${MOLECULE_IMAGE}
-    pre_build_image: True
     command: /sbin/init
     privileged: True
 provisioner:
