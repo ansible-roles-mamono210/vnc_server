@@ -6,11 +6,6 @@ jobs:
   ansible-lint:
     uses: mamono210-github-actions-workflows/ansible-lint/.github/workflows/workflows.yml@main
 
-  molecule-centos7:
-    uses: mamono210-github-actions-workflows/molecule-docker/.github/workflows/workflows.yml@main
-    with:
-      molecule-image: ghcr.io/docker-hub-tm/ansible-test/centos7:latest
-
   trailing-whitespace:
     name: Find Trailing Whitespace
     runs-on: ubuntu-latest
