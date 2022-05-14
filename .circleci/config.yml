@@ -1,5 +1,33 @@
 ---
 jobs:
+  ansible-lint:
+    docker:
+      - image: ghcr.io/docker-hub-tm/circleci-executors/ansible-lint:latest
+    steps:
+      - checkout
+      - run:
+          name: Install the role
+          command: |
+            ansible-galaxy install git+${CIRCLE_REPOSITORY_URL},${CIRCLE_SHA1}
+      - run:
+          name: Install dependent roles
+          command: |
+            for d in `find molecule/* -maxdepth 1`; do
+              if [[ $d =~ molecule/.*/requirements.yml ]]; then
+                ansible-galaxy install -r $d
+              fi
+            done
+      - run:
+          name: Execulte Ansible-lint
+          command: ansible-lint
+      - run:
+          name: Show Ansible-lint version
+          command: |
+            pip list | grep ansible \
+            | GREP_COLORS='mt=01;34' egrep --color=always '[[:digit:]]' \
+            | GREP_COLORS='mt=01;34' egrep --color=always '\.' \
+            | GREP_COLORS='mt=01;33' egrep --color=always 'ansible.* '
+            ansible-lint --version
   molecule:
     machine:
       image: ubuntu-2004:202111-02
@@ -36,12 +64,44 @@ jobs:
       - run:
           name: Show Molecule version
           command: molecule --version
+  trailing-whitespace:
+    docker:
+      - image: ghcr.io/docker-hub-tm/circleci-executors/trailing-whitespace:latest
+    resource_class: small
+    steps:
+      - checkout
+      - run:
+          name: Execute trailing-whitespace
+          command: trailing-whitespace
+  yamllint:
+    docker:
+      - image: ghcr.io/docker-hub-tm/circleci-executors/yamllint:latest
+    resource_class: small
+    steps:
+      - checkout
+      - run:
+          name: Execute yamllint
+          command: yamllint *
+      - run:
+          name: Show yamllint version
+          command: |
+            yamllint --version \
+            | GREP_COLORS='mt=01;34' egrep --color=always '[[:digit:]]' \
+            | GREP_COLORS='mt=01;34' egrep --color=always '\.' \
+            | GREP_COLORS='mt=01;33' egrep --color=always 'yamllint.* '
 
 version: 2.1
 workflows:
   version: 2
   build:
     jobs:
+      - trailing-whitespace
+      - yamllint:
+          requires:
+            - trailing-whitespace
+      - ansible-lint:
+          requires:
+            - yamllint
       - molecule:
           matrix:
             parameters:
@@ -49,3 +109,5 @@ workflows:
                 - 'vnc_server'
               molecule-image:
                 - 'ghcr.io/docker-hub-tm/ansible-test/centos7:latest'
+          requires:
+            - ansible-lint
