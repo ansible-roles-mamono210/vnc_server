@@ -10,5 +10,5 @@ galaxy_info:
   role_name: vnc_server
   platforms:
     - name: EL
-      versions:
+      release:
         - 7
