@@ -1,6 +1,5 @@
 ---
 parseable: true
 warn_list:
-  - var-naming
   - risky-file-permissions
   - schema

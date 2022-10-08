@@ -5,19 +5,19 @@
   tasks:
     - name: Check whether VNC Server installed
       ansible.builtin.command: vncserver -help
-      register: VNCSERVER_INSTALLED
+      register: vncserver_installed
       changed_when: false
       ignore_errors: True
 
     - name: Check OS version
       ansible.builtin.command: cat /etc/redhat-release
-      register: OS_VERSION
+      register: os_version
       changed_when: false
 
     - name: Make sure VNC Server is installed
       ansible.builtin.debug:
-        var: VNCSERVER_INSTALLED
+        var: vncserver_installed
 
     - name: Show OS version
       ansible.builtin.debug:
-        var: OS_VERSION
+        var: os_version
