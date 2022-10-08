@@ -39,6 +39,9 @@
     src: /lib/systemd/system/vncserver@.service
     dest: /etc/systemd/system/vncserver@:1.service
     remote_src: yes
+    owner: root
+    group: root
+    mode: 0644
   when: configfile_exists is failed
 
 - name: Configure connecting user settings
