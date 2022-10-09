@@ -20,6 +20,7 @@ scenario:
     - dependency
     - syntax
     - create
+    - prepare
     - converge
     - idempotence
     - verify
