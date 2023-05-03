@@ -3,6 +3,8 @@ version: 2.1
 
 orbs:
   ansible-lint: orbss/ansible-lint@0.0.3
+  aws-cli: circleci/aws-cli@3.1.0
+  molecule-ec2: orbss/molecule-ec2@0.0.4
   yamllint: orbss/yamllint@0.0.4
 
 jobs:
@@ -13,41 +15,20 @@ jobs:
       - ansible-lint/execute:
           molecule-role-test: true
   molecule:
-    machine:
-      image: ubuntu-2004:202111-02
-    resource_class: medium
-    parameters:
-      checkout-path:
-        type: string
-      molecule-image:
-        type: string
+    executor: molecule-ec2/default
+    working_directory: ~/vnc_server
     steps:
-      - checkout:
-          path: << parameters.checkout-path >>
-      - run:
-          name: Install Molecule and dependencies
-          command: |
-            cd << parameters.checkout-path >>
-            pip3 install -r molecule/requirements.txt
-      - run:
-          name: Test with Molecule
-          command: |
-            cd << parameters.checkout-path >>
-            molecule test
-          environment:
-            PY_COLORS: '1'
-            ANSIBLE_FORCE_COLOR: '1'
-            MOLECULE_IMAGE: << parameters.molecule-image >>
-      - run:
-          name: Show Ansible version
-          command: |
-            pip3 list | grep ansible \
-            | GREP_COLORS='mt=01;34' egrep --color=always '[[:digit:]]' \
-            | GREP_COLORS='mt=01;34' egrep --color=always '\.' \
-            | GREP_COLORS='mt=01;33' egrep --color=always 'ansible.* '
-      - run:
-          name: Show Molecule version
-          command: molecule --version
+      - checkout
+      - aws-cli/setup:
+          role-arn: "arn:aws:iam::808683561341:role/CircleCI_OIDC_ansible-roles-mamono210"
+          role-session-name: "circleci_molecule_vnc-server"
+          session-duration: '1800'
+      - molecule-ec2/execute:
+          aws-ami-name: "centos7-1*"
+          aws-ami-owner-id: "808683561341"
+          aws-resource-name: "molecule_vnc_server"
+          aws-vpc-subnet-id: "subnet-022a704b3061b8b39"
+          circleci-timeout: "15m"
   trailing-whitespace:
     docker:
       - image: ghcr.io/docker-images-mamono210/circleci-executors/trailing-whitespace:latest
@@ -75,11 +56,6 @@ workflows:
           requires:
             - yamllint
       - molecule:
-          matrix:
-            parameters:
-              checkout-path:
-                - 'vnc_server'
-              molecule-image:
-                - 'ghcr.io/docker-images-mamono210/ansible-test/centos7:latest'
+          context: aws-oidc
           requires:
             - ansible-lint

@@ -65,7 +65,7 @@
 
 - name: Check whether vnc password is set
   ansible.builtin.command: "test -e /home/{{ vnc_user }}/.vnc/passwd"
-  register: vncpassword_set
+  register: vnc_password_set
   changed_when: False
   ignore_errors: True
 
@@ -73,7 +73,9 @@
   ansible.builtin.shell: |
     set -o pipefail
     echo {{ vnc_password }} | vncpasswd -f > /home/{{ vnc_user }}/.vnc/passwd
-  when: vncpassword_set is failed
+  register: default_password_set
+  changed_when: default_password_set.rc == 0
+  when: vnc_password_set is failed
 
 - name: Change permission of password settings file
   ansible.builtin.file:

@@ -2,4 +2,4 @@ wheel
 docker
 ansible
 molecule
-molecule-docker
+molecule-plugins[docker]
