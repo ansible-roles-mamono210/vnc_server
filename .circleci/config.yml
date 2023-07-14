@@ -4,7 +4,7 @@ version: 2.1
 orbs:
   ansible-lint: orbss/ansible-lint@0.0.3
   aws-cli: circleci/aws-cli@3.1.0
-  molecule-ec2: orbss/molecule-ec2@0.0.4
+  molecule-ec2: orbss/molecule-ec2@0.0.7
   yamllint: orbss/yamllint@0.0.4
 
 jobs:
@@ -26,6 +26,7 @@ jobs:
       - molecule-ec2/execute:
           aws-ami-name: "centos7-1*"
           aws-ami-owner-id: "808683561341"
+          aws-instance-type: 't2.medium'
           aws-resource-name: "molecule_vnc_server"
           aws-vpc-subnet-id: "subnet-022a704b3061b8b39"
           circleci-timeout: "15m"
